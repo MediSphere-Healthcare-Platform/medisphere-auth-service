@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -39,5 +39,10 @@ public class AuthController {
                 .status("SUCCESS")
                 .message("Token is valid")
                 .build());
+    }
+
+    @DeleteMapping("/user")
+    public ResponseEntity<ApiResponse<String>> deleteUser(@RequestParam String email) {
+        return ResponseEntity.ok(authService.deleteUser(email));
     }
 }

@@ -52,8 +52,8 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login", "/auth/register/**").permitAll()
-                        .requestMatchers("/auth/create-user").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/auth/login", "/api/v1/auth/register/**", "/api/v1/auth/create-user").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/v1/auth/user").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -65,7 +65,8 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService());
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }

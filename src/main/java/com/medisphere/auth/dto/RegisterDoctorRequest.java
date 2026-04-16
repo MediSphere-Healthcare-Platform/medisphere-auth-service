@@ -10,7 +10,9 @@ import lombok.NoArgsConstructor;
 public class RegisterDoctorRequest {
     private String email;
     private String password;
-    private String name;
-    private String specialization;
+    private String firstName;
+    private String lastName;
+    private String specialty;
     private String phone;
+    private String licenseUrl;
 }
