@@ -21,4 +21,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     void deleteDoctorByEmail(@Param("email") String email);
 
     long countByRole(String role);
+
+    @Query("SELECT MAX(CAST(SUBSTRING(u.msUserId, 3) AS long)) FROM User u WHERE u.role = :role")
+    Optional<Long> findMaxIdByRole(@Param("role") String role);
 }

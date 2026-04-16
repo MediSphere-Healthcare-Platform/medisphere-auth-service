@@ -33,6 +33,7 @@ public class AuthService {
     private final PatientClient patientClient;
     private final DoctorClient doctorClient;
 
+    @Transactional
     public ApiResponse<String> registerPatient(RegisterPatientRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             return ApiResponse.<String>builder()
@@ -51,7 +52,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        // Call Patient Service via Feign Client
+        // Call Patient Service via Feign Client - Propagate exception to trigger rollback
         try {
             PatientDto patientDto = new PatientDto();
             patientDto.setMsUserId(user.getMsUserId());
@@ -65,7 +66,7 @@ public class AuthService {
 
             patientClient.createPatient(patientDto);
         } catch (Exception e) {
-            System.err.println("Failed to synchronize with Patient Service: " + e.getMessage());
+            throw new RuntimeException("Patient User created, but failed to sync with Patient Service: " + e.getMessage());
         }
 
         return ApiResponse.<String>builder()
@@ -138,6 +139,7 @@ public class AuthService {
         }
     }
 
+    @Transactional
     public ApiResponse<String> createUser(UserDto userDto) {
         if (userRepository.existsByEmail(userDto.getEmail())) {
             return ApiResponse.<String>builder()
@@ -177,12 +179,8 @@ public class AuthService {
 
                 doctorClient.createDoctor(createDoctorDTO);
             } catch (Exception e) {
-                // Return a specific message so Admin Service knows the sync failed
-                return ApiResponse.<String>builder()
-                        .status("FAILED")
-                        .message("User created, but failed to sync with Doctor Service: " + e.getMessage())
-                        .data(user.getMsUserId())
-                        .build();
+                // Throw exception to trigger rollback so we don't end up with zombie accounts
+                throw new RuntimeException("User created, but failed to sync with Doctor Service: " + e.getMessage());
             }
         }
 
@@ -223,8 +221,8 @@ public class AuthService {
 
     private String generateMsUserId(String role) {
         String prefix = role.equalsIgnoreCase("DOCTOR") ? "UD" : "UP";
-        // Use a timestamp to ensure uniqueness even if users are deleted
-        String timestamp = String.valueOf(System.currentTimeMillis()).substring(7);
-        return prefix + timestamp;
+        // Find the maximum numeric ID used so far for this specific role
+        Long maxId = userRepository.findMaxIdByRole(role.toUpperCase()).orElse(0L);
+        return String.format("%s%04d", prefix, maxId + 1);
     }
 }
