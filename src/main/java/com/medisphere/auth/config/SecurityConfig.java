@@ -52,7 +52,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/login", "/api/v1/auth/register/**", "/api/v1/auth/create-user").permitAll()
+                        .requestMatchers("/api/v1/auth/login", "/api/v1/auth/register/**", "/api/v1/auth/create-user", "/api/v1/auth/email/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/v1/auth/user").permitAll()
                         .anyRequest().authenticated()
                 )

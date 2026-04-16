@@ -13,6 +13,7 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
     Optional<User> findByEmail(String email);
+
     boolean existsByEmail(String email);
 
     @Transactional
@@ -24,4 +25,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     @Query("SELECT MAX(CAST(SUBSTRING(u.msUserId, 3) AS long)) FROM User u WHERE u.role = :role")
     Optional<Long> findMaxIdByRole(@Param("role") String role);
+
+    Optional<User> findByMsUserId(String msUserId);
 }
