@@ -52,7 +52,8 @@ public class AuthService {
 
         userRepository.save(user);
 
-        // Call Patient Service via Feign Client - Propagate exception to trigger rollback
+        // Call Patient Service via Feign Client - Propagate exception to trigger
+        // rollback
         try {
             PatientDto patientDto = new PatientDto();
             patientDto.setMsUserId(user.getMsUserId());
@@ -66,7 +67,8 @@ public class AuthService {
 
             patientClient.createPatient(patientDto);
         } catch (Exception e) {
-            throw new RuntimeException("Patient User created, but failed to sync with Patient Service: " + e.getMessage());
+            throw new RuntimeException(
+                    "Patient User created, but failed to sync with Patient Service: " + e.getMessage());
         }
 
         return ApiResponse.<String>builder()
@@ -163,16 +165,25 @@ public class AuthService {
             try {
                 // Ensure all mandatory fields for Doctor Service have non-empty defaults
                 CreateDoctorDTO createDoctorDTO = CreateDoctorDTO.builder()
-                        .firstName(userDto.getFirstName() != null && !userDto.getFirstName().isEmpty() ? userDto.getFirstName() : "NA")
-                        .lastName(userDto.getLastName() != null && !userDto.getLastName().isEmpty() ? userDto.getLastName() : "NA")
-                        .doctorId(user.getMsUserId()) 
+                        .firstName(userDto.getFirstName() != null && !userDto.getFirstName().isEmpty()
+                                ? userDto.getFirstName()
+                                : "NA")
+                        .lastName(userDto.getLastName() != null && !userDto.getLastName().isEmpty()
+                                ? userDto.getLastName()
+                                : "NA")
+                        .doctorId(user.getMsUserId())
                         .msUserId(user.getMsUserId())
-                        .specialty(userDto.getSpecialty() != null && !userDto.getSpecialty().isEmpty() ? userDto.getSpecialty() : "General")
-                        .drLicence(userDto.getLicenseUrl() != null && !userDto.getLicenseUrl().isEmpty() ? userDto.getLicenseUrl() : "NA")
-                        .drContactNo(userDto.getPhone() != null && !userDto.getPhone().isEmpty() ? userDto.getPhone() : "NA")
-                        .drNic(user.getMsUserId()) 
+                        .specialty(userDto.getSpecialty() != null && !userDto.getSpecialty().isEmpty()
+                                ? userDto.getSpecialty()
+                                : "General")
+                        .drLicence(userDto.getLicenseUrl() != null && !userDto.getLicenseUrl().isEmpty()
+                                ? userDto.getLicenseUrl()
+                                : "NA")
+                        .drContactNo(
+                                userDto.getPhone() != null && !userDto.getPhone().isEmpty() ? userDto.getPhone() : "NA")
+                        .drNic(user.getMsUserId())
                         .status("ACTIVE")
-                        .profilePic("N/A") 
+                        .profilePic("N/A")
                         .createDate(Instant.now())
                         .modifiedDate(Instant.now())
                         .build();
@@ -224,5 +235,18 @@ public class AuthService {
         // Find the maximum numeric ID used so far for this specific role
         Long maxId = userRepository.findMaxIdByRole(role.toUpperCase()).orElse(0L);
         return String.format("%s%04d", prefix, maxId + 1);
+    }
+
+    public ApiResponse<String> getEmailByMsUserId(String msUserId) {
+        return userRepository.findByMsUserId(msUserId)
+                .map(user -> ApiResponse.<String>builder()
+                        .status("SUCCESS")
+                        .message("Email found")
+                        .data(user.getEmail())
+                        .build())
+                .orElse(ApiResponse.<String>builder()
+                        .status("FAILED")
+                        .message("User not found with ID: " + msUserId)
+                        .build());
     }
 }
