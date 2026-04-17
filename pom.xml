@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.medisphere</groupId>
 	<artifactId>medisphere-auth-service</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>medisphere-auth-service</name>
 	<description>Authentication service module for Medisphere solution</description>
 	<url/>
