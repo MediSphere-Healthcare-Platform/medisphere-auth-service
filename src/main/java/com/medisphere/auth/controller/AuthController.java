@@ -2,6 +2,7 @@ package com.medisphere.auth.controller;
 
 import com.medisphere.auth.dto.*;
 import com.medisphere.auth.service.AuthService;
+import com.medisphere.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

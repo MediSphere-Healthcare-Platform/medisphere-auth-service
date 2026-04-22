@@ -203,6 +203,10 @@ public class AuthService {
                 .build();
     }
 
+    public void validateToken(String token) {
+        jwtUtil.validateTokenSimple(token);
+    }
+
     @Transactional
     public ApiResponse<String> deleteUser(String email) {
         User user = userRepository.findByEmail(email).orElse(null);
@@ -224,7 +228,8 @@ public class AuthService {
             }
         } catch (Exception e) {
             // Throw exception to trigger rollback in Auth service if sync fails
-            throw new RuntimeException("Failed to synchronize deletion with " + user.getRole() + " service: " + e.getMessage());
+            throw new RuntimeException(
+                    "Failed to synchronize deletion with " + user.getRole() + " service: " + e.getMessage());
         }
 
         userRepository.deleteByEmail(email);
@@ -247,7 +252,7 @@ public class AuthService {
         String prefix = role.equalsIgnoreCase("DOCTOR") ? "UD" : "UP";
         // Find the maximum numeric ID used so far for this specific role locally
         Long localMax = userRepository.findMaxIdByRole(role.toUpperCase()).orElse(0L);
-        
+
         // Fetch maximum ID from remote service to prevent collisions
         Long remoteMax = 0L;
         try {
@@ -259,7 +264,7 @@ public class AuthService {
         } catch (Exception e) {
             System.err.println("Failed to fetch remote max ID for " + role + ": " + e.getMessage());
         }
-        
+
         Long finalMax = Math.max(localMax, remoteMax != null ? remoteMax : 0L);
         return String.format("%s%04d", prefix, finalMax + 1);
     }
