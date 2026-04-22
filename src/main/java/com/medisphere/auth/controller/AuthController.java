@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@CrossOrigin
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
@@ -49,5 +50,10 @@ public class AuthController {
     @GetMapping("/email/{msUserId}")
     public ResponseEntity<ApiResponse<String>> getEmailByMsUserId(@PathVariable("msUserId") String msUserId) {
         return ResponseEntity.ok(authService.getEmailByMsUserId(msUserId));
+    }
+
+    @DeleteMapping("/delete/internal/{msUserId}")
+    public ResponseEntity<ApiResponse<String>> deleteUserByMsUserId(@PathVariable("msUserId") String msUserId) {
+        return ResponseEntity.ok(authService.deleteUserByMsUserId(msUserId));
     }
 }

@@ -18,8 +18,13 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     @Transactional
     @Modifying
-    @Query("DELETE FROM User u WHERE u.email = :email AND u.role = 'DOCTOR'")
-    void deleteDoctorByEmail(@Param("email") String email);
+    @Query("DELETE FROM User u WHERE u.email = :email")
+    void deleteByEmail(@Param("email") String email);
+
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM User u WHERE u.msUserId = :msUserId")
+    void deleteByMsUserId(@Param("msUserId") String msUserId);
 
     long countByRole(String role);
 

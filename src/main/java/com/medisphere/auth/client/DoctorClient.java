@@ -13,4 +13,6 @@ public interface DoctorClient {
 
     @org.springframework.web.bind.annotation.DeleteMapping("/deleteDoctor/{id}")
     Object deleteDoctor(@org.springframework.web.bind.annotation.PathVariable("id") String id, @RequestBody com.medisphere.auth.dto.DeleteDoctorDTO deleteDoctorDTO);
+    @org.springframework.web.bind.annotation.GetMapping("/getMaxMsUserId/internal")
+    Long getMaxMsUserId();
 }

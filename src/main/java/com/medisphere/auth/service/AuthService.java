@@ -93,6 +93,7 @@ public class AuthService {
                 .data(AuthResponse.builder()
                         .token(token)
                         .role(user.getRole())
+                        .msUserId(user.getMsUserId())
                         .message("Login successful")
                         .build())
                 .build();
@@ -213,28 +214,54 @@ public class AuthService {
                     .build();
         }
 
-        // Sync deletion with Doctor Service using msUserId
-        if ("DOCTOR".equalsIgnoreCase(user.getRole())) {
-            try {
+        // Sync deletion with respective service
+        try {
+            if ("DOCTOR".equalsIgnoreCase(user.getRole())) {
                 DeleteDoctorDTO deleteDto = new DeleteDoctorDTO(user.getMsUserId());
                 doctorClient.deleteDoctor(user.getMsUserId(), deleteDto);
-            } catch (Exception e) {
-                System.err.println("Failed to delete from Doctor Service: " + e.getMessage());
+            } else if ("PATIENT".equalsIgnoreCase(user.getRole())) {
+                patientClient.deletePatient(user.getMsUserId());
             }
+        } catch (Exception e) {
+            // Throw exception to trigger rollback in Auth service if sync fails
+            throw new RuntimeException("Failed to synchronize deletion with " + user.getRole() + " service: " + e.getMessage());
         }
 
-        userRepository.deleteDoctorByEmail(email);
+        userRepository.deleteByEmail(email);
         return ApiResponse.<String>builder()
                 .status("SUCCESS")
-                .message("User deleted successfully")
+                .message("User and associated profile deleted successfully")
+                .build();
+    }
+
+    @Transactional
+    public ApiResponse<String> deleteUserByMsUserId(String msUserId) {
+        userRepository.deleteByMsUserId(msUserId);
+        return ApiResponse.<String>builder()
+                .status("SUCCESS")
+                .message("User deleted from Auth successfully via MS User ID")
                 .build();
     }
 
     private String generateMsUserId(String role) {
         String prefix = role.equalsIgnoreCase("DOCTOR") ? "UD" : "UP";
-        // Find the maximum numeric ID used so far for this specific role
-        Long maxId = userRepository.findMaxIdByRole(role.toUpperCase()).orElse(0L);
-        return String.format("%s%04d", prefix, maxId + 1);
+        // Find the maximum numeric ID used so far for this specific role locally
+        Long localMax = userRepository.findMaxIdByRole(role.toUpperCase()).orElse(0L);
+        
+        // Fetch maximum ID from remote service to prevent collisions
+        Long remoteMax = 0L;
+        try {
+            if (role.equalsIgnoreCase("DOCTOR")) {
+                remoteMax = doctorClient.getMaxMsUserId();
+            } else {
+                remoteMax = patientClient.getMaxMsUserId();
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to fetch remote max ID for " + role + ": " + e.getMessage());
+        }
+        
+        Long finalMax = Math.max(localMax, remoteMax != null ? remoteMax : 0L);
+        return String.format("%s%04d", prefix, finalMax + 1);
     }
 
     public ApiResponse<String> getEmailByMsUserId(String msUserId) {
