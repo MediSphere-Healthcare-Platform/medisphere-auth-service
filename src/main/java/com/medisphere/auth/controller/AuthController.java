@@ -35,11 +35,19 @@ public class AuthController {
     }
 
     @GetMapping("/validate")
-    public ResponseEntity<ApiResponse<String>> validateToken() {
-        return ResponseEntity.ok(ApiResponse.<String>builder()
-                .status("SUCCESS")
-                .message("Token is valid")
-                .build());
+    public ResponseEntity<ApiResponse<String>> validateToken(@RequestParam("token") String token) {
+        try {
+            authService.validateToken(token);
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                    .status("SUCCESS")
+                    .message("Token is valid")
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(ApiResponse.<String>builder()
+                    .status("FAILED")
+                    .message("Invalid token: " + e.getMessage())
+                    .build());
+        }
     }
 
     @DeleteMapping("/user")
